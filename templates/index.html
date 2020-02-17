@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        /* div {
+            margin-top: 1em;
+            margin-bottom: 1em;
+        } */
+        table tbody {
+            font-family: monospace;
+        }
+
+        table tbody td {
+            border: 1px dotted black;
+            text-align: center;
+            padding-left: 0.5em;
+            padding-right: 0.5em;
+        }
+    </style>
+
+</head>
+<body>
+    <div id="app-4">
+        <button type="button" v-on:click="getRequests">Refresh</button>
+        <h2>Requests</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Date</th>
+                    <th>Method</th>
+                    <th>Address</th>
+                    <th>URI</th>
+                    <th>Details</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-for="(req, index) in requests">
+                    <td>{{ index+1 }}</td>
+                    <td>{{ req.DateTime }}</td>
+                    <td>{{ req.Method }}</td>
+                    <td>{{ req.RemoteAddr }}</td>
+                    <td>{{ req.RequestURI }}</td>
+                    <td><button v-on:click="showDetails(index)">View</button></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2>Request Details</h2>
+        <pre>{{ details }}</pre>
+        <a name="req-details"></a>
+    </div>
+
+
+    <script src="js/vue.js"></script>
+    <script>
+        var app4 = new Vue({
+            el: '#app-4',
+            data: {
+                requests: [],
+                details: ""
+            },
+            methods: {
+                getRequests: function() {
+                    var xhttp = new XMLHttpRequest();
+            
+                    xhttp.onreadystatechange = function() {
+                        if (this.readyState == 4 && this.status == 200) {
+                            result = JSON.parse(this.responseText)
+                            console.log(result)
+                            app4.requests = result
+                            app4.details = ""
+                        }
+                    }
+
+                    xhttp.open("GET", '/api/reqs', true);
+                    xhttp.send()
+
+                },
+                showDetails: function(index) {
+                    this.details = this.requests[index].Request
+                }
+            },
+            mounted() {
+                this.getRequests()
+            } 
+        })
+
+        // document.getElementById("btn-kill").addEventListener("click", function(){
+        //     const Http = new XMLHttpRequest();
+        //     const url='/api/exit';
+        //     Http.open("GET", url);
+        //     Http.send();
+
+        //     Http.onreadystatechange = (e) => {
+        //         console.log(Http.responseText)
+        //     }
+        // });
+
+        // document.getElementById("btn-reqs").addEventListener("click", function(){
+        //     var xhttp = new XMLHttpRequest();
+            
+        //     xhttp.onreadystatechange = function() {
+        //         if (this.readyState == 4 && this.status == 200) {
+        //             console.log(JSON.parse(this.responseText))
+        //         }
+        //     }
+
+        //     xhttp.open("GET", '/api/reqs', true);
+        //     xhttp.send();
+        // });
+    </script>
+</body>
+</html>
