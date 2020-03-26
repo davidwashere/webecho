@@ -23,6 +23,16 @@ var defaultRingBufferSize = 30
 
 var requestRingBuffer ringBuffer
 
+var serverInfo serverInfoType
+
+type serverInfoType struct {
+	Hostname string
+}
+
+func (sit *serverInfoType) MarshalJSON() ([]byte, error) {
+	return json.Marshal(sit)
+}
+
 type ringBuffer struct {
 	Buffer []historicRequest
 	Size   int
@@ -37,6 +47,11 @@ type historicRequest struct {
 	RequestURI string
 	DateTime   string
 	Method     string
+}
+
+type dataResponse struct {
+	Requests   []historicRequest
+	ServerInfo serverInfoType
 }
 
 func (buf *ringBuffer) Add(req historicRequest) {
@@ -109,6 +124,7 @@ func webHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("%s\n", fullRequest)
 
 	// r.Write(w)
+	w.Header().Add("X-WEBECHO-HOSTNAME", serverInfo.Hostname)
 	fmt.Fprintf(w, "%s\n", fullRequest)
 
 	req := historicRequest{}
@@ -151,12 +167,30 @@ func adminHandler(w http.ResponseWriter, r *http.Request) {
 	// 	wg.Done()
 
 	// } else
-	if strings.EqualFold("/api/reqs", path) {
-		reqs, _ := json.Marshal(requestRingBuffer.Get())
+	// if strings.EqualFold("/api/reqs", path) {
+	// 	reqs, _ := json.Marshal(requestRingBuffer.Get())
 
-		fmt.Fprintf(w, string(reqs))
-		// fmt.Println(string(reqs))
+	// 	fmt.Fprintf(w, string(reqs))
+	// 	// fmt.Println(string(reqs))
 
+	// } else 
+	if strings.EqualFold("/api/data", path) {
+		data := dataResponse{}
+		data.Requests = requestRingBuffer.Get()
+		data.ServerInfo = serverInfo
+
+		// rb, _ := json.Marshal(requestRingBuffer.Get())
+		// data.Requests = string(rb)
+
+		// si, _ := json.Marshal(serverInfo)
+		// data.ServerInfo = string(si)
+
+		dataBytes, _ := json.Marshal(data)
+		dataStr := string(dataBytes)
+
+		fmt.Fprintf(w, dataStr)
+		fmt.Printf(dataStr)
+	 
 	} else {
 		// http.Error(w, "What you trying to do man?", http.StatusNotFound)
 		w.WriteHeader(http.StatusNotFound)
@@ -182,10 +216,12 @@ func init() {
 	requestRingBuffer.Buffer = make([]historicRequest, defaultRingBufferSize)
 	requestRingBuffer.Size = defaultRingBufferSize
 	requestRingBuffer.Index = 0
+
+	serverInfo = serverInfoType{}
+	serverInfo.Hostname, _ = os.Hostname()
 }
 
 func main() {
-
 	webPort, adminPort := getPorts()
 
 	wg.Add(1)

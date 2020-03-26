@@ -16,12 +16,25 @@
             padding-left: 0.5em;
             padding-right: 0.5em;
         }
+
+        div.hostname {
+            margin-top: 1em;
+            font-size: larger;
+            font-weight: bold;;
+        }
+
+        div.hostname span {
+            font-weight: normal;
+        }
     </style>
 
 </head>
 <body>
     <div id="app-4">
         <button type="button" v-on:click="getRequests">Refresh</button>
+        <div class="hostname">
+            Hostname: <span>{{ hostname }}</span>
+        </div>
         <h2>Requests</h2>
         <table>
             <thead>
@@ -58,6 +71,7 @@
             el: '#app-4',
             data: {
                 requests: [],
+                hostname: "",
                 details: ""
             },
             methods: {
@@ -68,12 +82,13 @@
                         if (this.readyState == 4 && this.status == 200) {
                             result = JSON.parse(this.responseText)
                             console.log(result)
-                            app4.requests = result
+                            app4.requests = result.Requests
+                            app4.hostname = result.ServerInfo.Hostname
                             app4.details = ""
                         }
                     }
 
-                    xhttp.open("GET", '/api/reqs', true);
+                    xhttp.open("GET", '/api/data', true);
                     xhttp.send()
 
                 },
