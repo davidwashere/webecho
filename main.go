@@ -2,8 +2,10 @@ package main
 
 import (
 	"bytes"
+	"embed"
 	"encoding/json"
 	"fmt"
+	"io/fs"
 	"io/ioutil"
 	"log"
 	"net"
@@ -13,8 +15,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-
-	"github.com/gobuffalo/packr"
 )
 
 var wg sync.WaitGroup
@@ -24,6 +24,9 @@ var defaultRingBufferSize = 30
 var requestRingBuffer ringBuffer
 
 var serverInfo serverInfoType
+
+//go:embed templates
+var content embed.FS
 
 type serverInfoType struct {
 	Hostname string
@@ -141,8 +144,9 @@ func webHandler(w http.ResponseWriter, r *http.Request) {
 func adminServer(port string) {
 	aAdmServer := http.NewServeMux()
 
-	box := packr.NewBox("./templates")
-	aAdmServer.Handle("/", http.FileServer(box))
+	// box := packr.NewBox("./templates")
+	fs, _ := fs.Sub(content, "templates")
+	aAdmServer.Handle("/", http.FileServer(http.FS(fs)))
 
 	aAdmServer.HandleFunc("/api/", adminHandler)
 
@@ -173,7 +177,7 @@ func adminHandler(w http.ResponseWriter, r *http.Request) {
 	// 	fmt.Fprintf(w, string(reqs))
 	// 	// fmt.Println(string(reqs))
 
-	// } else 
+	// } else
 	if strings.EqualFold("/api/data", path) {
 		data := dataResponse{}
 		data.Requests = requestRingBuffer.Get()
@@ -190,7 +194,7 @@ func adminHandler(w http.ResponseWriter, r *http.Request) {
 
 		fmt.Fprintf(w, dataStr)
 		fmt.Printf(dataStr)
-	 
+
 	} else {
 		// http.Error(w, "What you trying to do man?", http.StatusNotFound)
 		w.WriteHeader(http.StatusNotFound)
