@@ -45,8 +45,10 @@ To test locally execute:
 go run .
 ```
 
-To build with static content embedded use:
+To build:
+
 ```
-go get -u github.com/gobuffalo/packr/packr
-packr build
+go build .
 ```
+
+Also avail on [dockerhub](https://hub.docker.com/r/davidwashere/webecho)
