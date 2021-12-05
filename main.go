@@ -192,8 +192,8 @@ func adminHandler(w http.ResponseWriter, r *http.Request) {
 		dataBytes, _ := json.Marshal(data)
 		dataStr := string(dataBytes)
 
-		fmt.Fprintf(w, dataStr)
-		fmt.Printf(dataStr)
+		fmt.Fprint(w, dataStr)
+		fmt.Print(dataStr)
 
 	} else {
 		// http.Error(w, "What you trying to do man?", http.StatusNotFound)
