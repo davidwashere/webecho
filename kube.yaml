@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: webecho
+  name: webecho
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: webecho
+  template:
+    metadata:
+      labels:
+        app: webecho
+    spec:
+      containers:
+      - image: davidwashere/webecho
+        name: webecho
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: webecho-svc
+spec:
+  type: NodePort
+  selector:
+    app: webecho
+  ports:
+    - port: 5080
+      targetPort: 5080
+
+---
+
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: webecho-route
+spec:
+  # host: hello-openshift-hello-openshift.<Ingress_Domain> 
+  # port:
+  #   targetPort: 5080
+  to:
+    kind: Service
+    name: webecho-svc
