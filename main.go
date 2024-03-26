@@ -121,12 +121,13 @@ func webHandler(w http.ResponseWriter, r *http.Request) {
 
 	path := r.URL.EscapedPath()
 
-	log.Printf("WEB: [%s] %s:\n\n", r.RemoteAddr, path)
+	sb := strings.Builder{}
 
-	// r.Write(log.Writer())
-	fmt.Printf("%s\n", fullRequest)
+	sb.WriteString(fmt.Sprintf("WEB: [%s] %s:\n\n", r.RemoteAddr, path))
+	sb.WriteString(fmt.Sprintf("%s\n", fullRequest))
 
-	// r.Write(w)
+	log.Print(sb.String())
+
 	w.Header().Add("X-WEBECHO-HOSTNAME", serverInfo.Hostname)
 	fmt.Fprintf(w, "%s\n", fullRequest)
 
