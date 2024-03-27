@@ -12,7 +12,7 @@ FROM scratch
 
 COPY --from=builder /go/src/app/webecho .
 
-expose 5080
-expose 5081
+expose 8080
+expose 8081
 
 CMD ["/webecho"]
