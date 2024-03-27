@@ -1,18 +1,28 @@
-# WebEcho
-Simple web-server written in Go that will echo the request it recieves (both to a log and the http response)
+# Web Echo
+Simple web-server that will echo the request it recieves to stdout and the http response
 
 It includes a web gui for viewing historic requests (via the admin port)
 
-## Examples
-Starting it up
+## Usage
 ```
-$ ./webecho.exe
-2020/02/17 00:46:50 Using default web [5080] and admin [5081] ports, to use different ports run:
+$ ./webecho
+2024/03/27 00:37:48   Web Server listening on port 8080
+2024/03/27 00:37:48 Admin Server listening on port 8081
+```
 
-        webecho.exe <webPort> <adminPort>
+To customize the ports:
 
-2020/02/17 00:46:50 Admin Server listening on port 5081
-2020/02/17 00:46:50 Web Server listening on port 5080
+```
+$ ./webecho
+Usage of webecho
+  -adminport int
+        admin server listen port (default 8081)
+  -webport int
+        web server listen port (default 8080)
+
+$ ./webecho --webport 9999 --adminport 10000
+2024/03/27 00:40:35   Web Server listening on port 9999
+2024/03/27 00:40:35 Admin Server listening on port 10000
 ```
 
 Making a simple request

@@ -4,26 +4,26 @@ import (
 	"bytes"
 	"embed"
 	"encoding/json"
+	"flag"
 	"fmt"
+	"io"
 	"io/fs"
-	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
 	"os"
-	"path/filepath"
 	"strings"
 	"sync"
 	"time"
 )
 
-var wg sync.WaitGroup
-
-var defaultRingBufferSize = 30
-
-var requestRingBuffer ringBuffer
-
-var serverInfo serverInfoType
+var (
+	webPort               int
+	adminPort             int
+	defaultRingBufferSize = 30
+	requestRingBuffer     ringBuffer
+	serverInfo            serverInfoType
+)
 
 //go:embed templates
 var content embed.FS
@@ -59,11 +59,8 @@ type dataResponse struct {
 
 func (buf *ringBuffer) Add(req historicRequest) {
 	buf.mux.Lock()
-
 	buf.Index = (buf.Index + 1) % buf.Size
-
 	buf.Buffer[buf.Index] = req
-
 	buf.mux.Unlock()
 }
 
@@ -79,7 +76,6 @@ func (buf *ringBuffer) Get() []historicRequest {
 			newIndex = buf.Size + newIndex
 		}
 
-		// curReq := buf.Buffer[(buf.Index-i)%buf.Size]
 		curReq := buf.Buffer[newIndex]
 		if curReq.Ready {
 			reqs = append(reqs, curReq)
@@ -91,21 +87,21 @@ func (buf *ringBuffer) Get() []historicRequest {
 	return reqs
 }
 
-func webServer(port string) {
+func webServer() {
 	aWebServer := http.NewServeMux()
 	aWebServer.HandleFunc("/", webHandler)
 
-	listener, err := net.Listen("tcp4", ":"+port)
+	listener, err := net.Listen("tcp4", fmt.Sprintf(":%d", webPort))
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	log.Printf("Web Server listening on port %s\n", port)
+	log.Printf("  Web Server listening on port %d\n", webPort)
 	log.Fatal(http.Serve(listener, aWebServer))
 }
 
 func webHandler(w http.ResponseWriter, r *http.Request) {
-	body, err := ioutil.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		log.Printf("Error reading body: %v", err)
 		http.Error(w, "can't read body", http.StatusBadRequest)
@@ -122,10 +118,8 @@ func webHandler(w http.ResponseWriter, r *http.Request) {
 	path := r.URL.EscapedPath()
 
 	sb := strings.Builder{}
-
 	sb.WriteString(fmt.Sprintf("WEB: [%s] %s:\n\n", r.RemoteAddr, path))
 	sb.WriteString(fmt.Sprintf("%s\n", fullRequest))
-
 	log.Print(sb.String())
 
 	w.Header().Add("X-WEBECHO-HOSTNAME", serverInfo.Hostname)
@@ -142,22 +136,21 @@ func webHandler(w http.ResponseWriter, r *http.Request) {
 	requestRingBuffer.Add(req)
 }
 
-func adminServer(port string) {
+func adminServer() {
 	aAdmServer := http.NewServeMux()
 
-	// box := packr.NewBox("./templates")
 	fs, _ := fs.Sub(content, "templates")
 	aAdmServer.Handle("/", http.FileServer(http.FS(fs)))
 
 	aAdmServer.HandleFunc("/api/", adminHandler)
 
-	listener, err := net.Listen("tcp4", ":"+port)
+	listener, err := net.Listen("tcp4", fmt.Sprintf(":%d", adminPort))
 	if err != nil {
 		log.Fatal(err)
 		return
 	}
 
-	log.Printf("Admin Server listening on port %s\n", port)
+	log.Printf("Admin Server listening on port %d\n", adminPort)
 	log.Fatal(http.Serve(listener, aAdmServer))
 }
 
@@ -166,29 +159,10 @@ func adminHandler(w http.ResponseWriter, r *http.Request) {
 
 	log.Printf("ADM: [%s] %s\n", r.RemoteAddr, path)
 
-	// if strings.EqualFold("/api/exit", path) {
-	// 	log.Println("Admin Exit Yar")
-	// 	fmt.Fprintf(w, "Exiting...\n\n")
-	// 	wg.Done()
-
-	// } else
-	// if strings.EqualFold("/api/reqs", path) {
-	// 	reqs, _ := json.Marshal(requestRingBuffer.Get())
-
-	// 	fmt.Fprintf(w, string(reqs))
-	// 	// fmt.Println(string(reqs))
-
-	// } else
 	if strings.EqualFold("/api/data", path) {
 		data := dataResponse{}
 		data.Requests = requestRingBuffer.Get()
 		data.ServerInfo = serverInfo
-
-		// rb, _ := json.Marshal(requestRingBuffer.Get())
-		// data.Requests = string(rb)
-
-		// si, _ := json.Marshal(serverInfo)
-		// data.ServerInfo = string(si)
 
 		dataBytes, _ := json.Marshal(data)
 		dataStr := string(dataBytes)
@@ -202,21 +176,10 @@ func adminHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func getPorts() (string, string) {
-	webPort := "5080"
-	adminPort := "5081"
-
-	if len(os.Args) >= 3 { // <prog> <port1> <port2>
-		webPort = os.Args[1]
-		adminPort = os.Args[2]
-	} else {
-		log.Printf("Using default web [%s] and admin [%s] ports, to use different ports run: \n\n\t%s <webPort> <adminPort>\n\n", webPort, adminPort, filepath.Base(os.Args[0]))
-	}
-
-	return webPort, adminPort
-}
-
 func init() {
+	flag.IntVar(&webPort, "webport", 8080, "web server listen port")
+	flag.IntVar(&adminPort, "adminport", 8081, "admin server listen port")
+
 	requestRingBuffer = ringBuffer{}
 	requestRingBuffer.Buffer = make([]historicRequest, defaultRingBufferSize)
 	requestRingBuffer.Size = defaultRingBufferSize
@@ -227,12 +190,10 @@ func init() {
 }
 
 func main() {
-	webPort, adminPort := getPorts()
+	flag.Parse()
 
-	wg.Add(1)
-	go webServer(webPort)
-	go adminServer(adminPort)
+	go webServer()
+	go adminServer()
 
-	wg.Wait()
-	time.Sleep(time.Second * 1)
+	select {}
 }
