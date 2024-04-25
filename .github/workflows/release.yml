@@ -11,8 +11,6 @@ on:
 jobs:
   binaries:
     runs-on: ubuntu-latest
-    strategy:
-      GOOS
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v4
