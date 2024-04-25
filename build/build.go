@@ -80,7 +80,7 @@ func buildall() {
 }
 
 func build(t BuildTarget) {
-	cmd := exec.Command("go", "build", "-v", "-o", t.BuildFileName(), ".")
+	cmd := exec.Command("go", "build", "-o", t.BuildFileName(), ".")
 	cmd.Env = os.Environ()
 	cmd.Env = append(cmd.Env, fmt.Sprintf("GOOS=%s", t.OS))
 	cmd.Env = append(cmd.Env, fmt.Sprintf("GOARCH=%s", t.Arch))
