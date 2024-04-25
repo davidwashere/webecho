@@ -22,6 +22,7 @@ jobs:
         run: |
           go run ./build
 
+          ls -lR .
           cd bin/release
           files=$(go run ./build --list)
           echo "files: $files"
