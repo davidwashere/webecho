@@ -27,10 +27,10 @@ $ ./webecho --webport 9999 --adminport 10000
 
 Making a simple request
 ```
-$ curl -s localhost:5080?hello=world
+$ curl -s localhost:8080?hello=world
 GET /?hello=world HTTP/1.1
-Host: localhost:5080
-User-Agent: curl/7.65.3
+Host: localhost:8080
+User-Agent: curl/8.2.1
 Accept: */*
 ```
 
@@ -39,8 +39,8 @@ Also shown in the log
 2020/02/17 00:48:33 WEB: [127.0.0.1:64939] /:
 
 GET /?hello=world HTTP/1.1
-Host: localhost:5080
-User-Agent: curl/7.65.3
+Host: localhost:8080
+User-Agent: curl/8.2.1
 Accept: */*
 ```
 
