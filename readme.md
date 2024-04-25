@@ -13,7 +13,7 @@ $ ./webecho
 To customize the ports:
 
 ```
-$ ./webecho
+$ ./webecho -h
 Usage of webecho
   -adminport int
         admin server listen port (default 8081)
