@@ -168,12 +168,11 @@ func adminHandler(w http.ResponseWriter, r *http.Request) {
 		dataStr := string(dataBytes)
 
 		fmt.Fprint(w, dataStr)
-		fmt.Print(dataStr)
+		return
 
-	} else {
-		// http.Error(w, "What you trying to do man?", http.StatusNotFound)
-		w.WriteHeader(http.StatusNotFound)
 	}
+
+	w.WriteHeader(http.StatusNotFound)
 }
 
 func init() {
