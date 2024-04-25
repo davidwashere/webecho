@@ -84,6 +84,7 @@ func build(t BuildTarget) {
 	cmd.Env = os.Environ()
 	cmd.Env = append(cmd.Env, fmt.Sprintf("GOOS=%s", t.OS))
 	cmd.Env = append(cmd.Env, fmt.Sprintf("GOARCH=%s", t.Arch))
+	cmd.Env = append(cmd.Env, "CGO_ENABLED=0")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
