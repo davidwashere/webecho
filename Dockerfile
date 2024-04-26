@@ -15,5 +15,5 @@ COPY --from=builder /go/src/app/webecho .
 expose 8080
 expose 8081
 
-ENTRYPOINT "/webecho"
+ENTRYPOINT ["/webecho"]
 CMD ["--port", "8080", "--adminport","8081"]
