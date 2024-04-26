@@ -25,7 +25,7 @@ jobs:
           files=$(go run ./build --list)
           echo "files: $files"
           cd bin/release
-          gh release create ${{ inputs.tag }} $files
+          gh release create --generate-notes ${{ inputs.tag }} $files
 
   docker:
     runs-on: ubuntu-latest

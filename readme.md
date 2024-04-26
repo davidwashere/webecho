@@ -1,27 +1,28 @@
 # Web Echo
-Simple web-server that will echo the request it recieves to stdout and the http response
+Simple web-server that will echo the request it receives to stdout and the http response
 
-It includes a web gui for viewing historic requests (via the admin port)
+It includes a web 'admin' gui for viewing historic requests
+
+## Install
+Download pre-build binaries from [releases](https://github.com/davidwashere/webecho/releases/latest), also available as a container image on [Docker Hub](https://hub.docker.com/r/davidwashere/webecho)
 
 ## Usage
 ```
 $ ./webecho
 2024/03/27 00:37:48   Web Server listening on port 8080
-2024/03/27 00:37:48 Admin Server listening on port 8081
 ```
-
-To customize the ports:
 
 ```
 $ ./webecho -h
 Usage of webecho
-  -adminport int
-        admin server listen port (default 8081)
-  -webport int
+  -adminport string
+        admin server listen port, when set enables admin server
+  -port int
         web server listen port (default 8080)
-
-$ ./webecho --webport 9999 --adminport 10000
-2024/03/27 00:40:35   Web Server listening on port 9999
+```
+```
+$ ./webecho --adminport 10000
+2024/03/27 00:40:35   Web Server listening on port 8080
 2024/03/27 00:40:35 Admin Server listening on port 10000
 ```
 

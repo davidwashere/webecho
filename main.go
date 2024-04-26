@@ -12,6 +12,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -19,7 +20,7 @@ import (
 
 var (
 	webPort               int
-	adminPort             int
+	adminPortStr          string
 	defaultRingBufferSize = 30
 	requestRingBuffer     ringBuffer
 	serverInfo            serverInfoType
@@ -136,7 +137,7 @@ func webHandler(w http.ResponseWriter, r *http.Request) {
 	requestRingBuffer.Add(req)
 }
 
-func adminServer() {
+func adminServer(port int) {
 	aAdmServer := http.NewServeMux()
 
 	fs, _ := fs.Sub(content, "templates")
@@ -144,13 +145,13 @@ func adminServer() {
 
 	aAdmServer.HandleFunc("/api/", adminHandler)
 
-	listener, err := net.Listen("tcp4", fmt.Sprintf(":%d", adminPort))
+	listener, err := net.Listen("tcp4", fmt.Sprintf(":%d", port))
 	if err != nil {
 		log.Fatal(err)
 		return
 	}
 
-	log.Printf("Admin Server listening on port %d\n", adminPort)
+	log.Printf("Admin Server listening on port %d\n", port)
 	log.Fatal(http.Serve(listener, aAdmServer))
 }
 
@@ -176,8 +177,12 @@ func adminHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func init() {
-	flag.IntVar(&webPort, "webport", 8080, "web server listen port")
-	flag.IntVar(&adminPort, "adminport", 8081, "admin server listen port")
+	flag.IntVar(&webPort, "port", 8080, "web server listen port")
+	flag.StringVar(&adminPortStr, "adminport", "", "admin server listen port, when set enables admin server")
+	// flag.Usage = func() {
+	// 	fmt.Fprintf(os.Stderr, "")
+	// 	flag.PrintDefaults()
+	// }
 
 	requestRingBuffer = ringBuffer{}
 	requestRingBuffer.Buffer = make([]historicRequest, defaultRingBufferSize)
@@ -192,7 +197,15 @@ func main() {
 	flag.Parse()
 
 	go webServer()
-	go adminServer()
+
+	if adminPortStr != "" {
+		adminPort, err := strconv.Atoi(adminPortStr)
+		if err == nil {
+			go adminServer(adminPort)
+		} else {
+			log.Printf("Unable to start admin server: %v", err)
+		}
+	}
 
 	select {}
 }
